@@ -1,2 +1,2 @@
 # matsuri
-A small interpreter
+A small Monkey interpreter(based on Writing an interpreter in go)
