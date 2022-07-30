@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/sho-hata/matsuri/ast"
 	"github.com/sho-hata/matsuri/lexer"
@@ -38,6 +39,7 @@ type Parser struct {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}, prefixParseFns: make(map[token.TokenType]prefixParseFn)}
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
 	p.nextToken()
 	p.nextToken()
@@ -59,6 +61,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
 		}
+
 		p.nextToken()
 	}
 
@@ -119,6 +122,22 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	}
 
 	return stmt
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{Token: p.currentToken}
+
+	value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.currentToken.Literal)
+		p.errors = append(p.errors, msg)
+
+		return nil
+	}
+
+	lit.Value = value
+
+	return lit
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
